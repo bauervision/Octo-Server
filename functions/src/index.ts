@@ -1,7 +1,16 @@
 import * as functions from 'firebase-functions';
 import * as admin from "firebase-admin";
 
+// cors.CorsOptions = {
+//     allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "X-Access-Token"],
+//     credentials: true,
+//     methods: "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE",
+//     origin: true,
+
+// };
+
 admin.initializeApp();
+
 
 // setup a function which will push out a message notifying the DB has updated
 // export const onAdminChange = functions.firestore.document('data/users').onUpdate(change => {
@@ -29,3 +38,39 @@ export const getUsers = functions.https.onRequest((request, response) => {
             response.status(500).send(error)
         })
 });
+
+
+export const addUser = functions.https.onRequest((request, response) => {
+
+    // set up the data
+    const data = {
+        age: request.query.age,
+        gender: request.query.gender,
+        initial: request.query.initial,
+        chosen: request.query.chosen
+    }
+
+    // // block gets
+    if (request.method !== 'POST') {
+        return response.status(500).json({
+            message: 'Not allowed'
+        })
+    }
+
+    // update the array data
+    admin.firestore().doc('data/users').update({
+        all: admin.firestore.FieldValue.arrayUnion(data)
+    }).then(() => {
+        response.status(200).json({
+            message: `Success`,
+            age: request.query.age,
+            gender: request.query.gender,
+            initial: request.query.initial,
+            chosen: request.query.chosen
+
+        })
+    }).catch(error => console.error(error));
+
+
+
+})
